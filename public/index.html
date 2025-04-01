@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplicación de Matrices</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        input,
+        button {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        #matrixInput {
+            margin-top: 20px;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d6a4f;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Multiplicación de Matrices</h1>
+
+        <!-- Input para las dimensiones de las matrices -->
+        <div>
+            <label for="rows1">Filas de la Matriz 1:</label>
+            <input type="number" id="rows1" min="1">
+        </div>
+        <div>
+            <label for="cols1">Columnas de la Matriz 1:</label>
+            <input type="number" id="cols1" min="1">
+        </div>
+
+        <div>
+            <label for="rows2">Filas de la Matriz 2:</label>
+            <input type="number" id="rows2" min="1">
+        </div>
+        <div>
+            <label for="cols2">Columnas de la Matriz 2:</label>
+            <input type="number" id="cols2" min="1">
+        </div>
+
+        <!-- Botón para generar las matrices -->
+        <button id="generateMatrices">Generar Matrices</button>
+
+        <!-- Contenedor para mostrar las matrices y cargar los valores -->
+        <div id="matrixInput"></div>
+
+        <!-- Botón para realizar la multiplicación -->
+        <button id="multiplyButton" style="display:none;">Multiplicar Matrices</button>
+
+        <!-- Área para mostrar el resultado -->
+        <h2>Resultado:</h2>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('generateMatrices').addEventListener('click', generateMatrixInputs);
+        document.getElementById('multiplyButton').addEventListener('click', multiplyMatrices);
+
+        function generateMatrixInputs() {
+            const rows1 = document.getElementById('rows1').value;
+            const cols1 = document.getElementById('cols1').value;
+            const rows2 = document.getElementById('rows2').value;
+            const cols2 = document.getElementById('cols2').value;
+
+            if (rows1 && cols1 && rows2 && cols2 && cols1 == rows2) {
+                // Generar campos para las matrices
+                let matrixHTML = `<h3>Matriz 1</h3><div id="matrix1"></div><h3>Matriz 2</h3><div id="matrix2"></div>`;
+                document.getElementById('matrixInput').innerHTML = matrixHTML;
+
+                createMatrixInputs(rows1, cols1, 'matrix1');
+                createMatrixInputs(rows2, cols2, 'matrix2');
+
+                // Mostrar el botón para multiplicar
+                document.getElementById('multiplyButton').style.display = 'inline';
+            } else {
+                alert("Las matrices no tienen dimensiones compatibles para multiplicarse.");
+            }
+        }
+
+        function createMatrixInputs(rows, cols, matrixId) {
+            const matrixContainer = document.getElementById(matrixId);
+            for (let i = 0; i < rows; i++) {
+                let rowHTML = '';
+                for (let j = 0; j < cols; j++) {
+                    rowHTML += `<input type="number" id="${matrixId}_${i}_${j}" class="matrix-input">`;
+                }
+                matrixContainer.innerHTML += `<div>${rowHTML}</div>`;
+            }
+        }
+
+        function multiplyMatrices() {
+            const rows1 = document.getElementById('rows1').value;
+            const cols1 = document.getElementById('cols1').value;
+            const rows2 = document.getElementById('rows2').value;
+            const cols2 = document.getElementById('cols2').value;
+
+            let matrix1 = [];
+            let matrix2 = [];
+
+            // Obtener datos de la matriz 1
+            for (let i = 0; i < rows1; i++) {
+                let row = [];
+                for (let j = 0; j < cols1; j++) {
+                    row.push(parseFloat(document.getElementById(`matrix1_${i}_${j}`).value));
+                }
+                matrix1.push(row);
+            }
+
+            // Obtener datos de la matriz 2
+            for (let i = 0; i < rows2; i++) {
+                let row = [];
+                for (let j = 0; j < cols2; j++) {
+                    row.push(parseFloat(document.getElementById(`matrix2_${i}_${j}`).value));
+                }
+                matrix2.push(row);
+            }
+
+            // Enviar matrices al servidor
+            fetch('/multiply', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ matrix1, matrix2 })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayResult(data.result);
+                    } else {
+                        alert(data.message);
+                    }
+                });
+        }
+
+        function displayResult(result) {
+            let resultHTML = '<table>';
+            result.forEach(row => {
+                resultHTML += '<tr>';
+                row.forEach(cell => {
+                    resultHTML += `<td>${cell}</td>`;
+                });
+                resultHTML += '</tr>';
+            });
+            resultHTML += '</table>';
+            document.getElementById('result').innerHTML = resultHTML;
+        }
+    </script>
+</body>
+
+</html>
